@@ -1,0 +1,522 @@
+-- Lunora Hub - UI Library with Customizable Settings
+local LunoraHub = {}
+LunoraHub.Config = {
+    WindowName = "Lunora Hub",
+    WindowWidth = 450,
+    WindowHeight = 320,
+    TabWidth = 150,
+    PrimaryColor = Color3.fromRGB(60, 150, 255),
+    SecondaryColor = Color3.fromRGB(0, 0, 0),
+    TextColor = Color3.fromRGB(255, 255, 255),
+    CornerRadius = 16,
+    StrokeThickness = 1.5,
+    Transparency = 0.2,
+}
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+local Camera = Workspace.CurrentCamera
+
+-- Main GUI Setup
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "LunoraHub"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = PlayerGui
+
+-- Main Window Frame
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, LunoraHub.Config.WindowWidth, 0, LunoraHub.Config.WindowHeight)
+MainFrame.Position = UDim2.new(0.5, -LunoraHub.Config.WindowWidth/2, 0.5, -LunoraHub.Config.WindowHeight/2)
+MainFrame.BackgroundColor3 = LunoraHub.Config.SecondaryColor
+MainFrame.BorderSizePixel = 0
+MainFrame.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, LunoraHub.Config.CornerRadius)
+MainCorner.Parent = MainFrame
+
+local MainGradient = Instance.new("UIGradient")
+MainGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(8, 8, 8)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(6, 6, 6)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(4, 4, 4))
+}
+MainGradient.Rotation = 45
+MainGradient.Parent = MainFrame
+
+local GlowBorder = Instance.new("UIStroke")
+GlowBorder.Color = LunoraHub.Config.PrimaryColor
+GlowBorder.Thickness = LunoraHub.Config.StrokeThickness
+GlowBorder.Transparency = LunoraHub.Config.Transparency
+GlowBorder.Parent = MainFrame
+
+-- Pulsing Glow Effect
+local glowRotation = 0
+RunService.RenderStepped:Connect(function(delta)
+    if not MainFrame.Visible then return end
+    glowRotation = glowRotation + (delta * 50)
+    if glowRotation >= 360 then glowRotation = 0 end
+    local pulse = math.abs(math.sin(tick() * 2))
+    GlowBorder.Transparency = 0.25 + (pulse * 0.25)
+    GlowBorder.Thickness = 2 + (pulse * 1)
+    local r = 60
+    local g = math.floor(130 + (pulse * 80))
+    local b = 255
+    GlowBorder.Color = Color3.fromRGB(r, g, b)
+end)
+
+-- Sidebar
+local Sidebar = Instance.new("Frame")
+Sidebar.Name = "Sidebar"
+Sidebar.Size = UDim2.new(0, LunoraHub.Config.TabWidth, 1, 0)
+Sidebar.Position = UDim2.new(0, 0, 0, 0)
+Sidebar.BackgroundColor3 = LunoraHub.Config.SecondaryColor
+Sidebar.BorderSizePixel = 0
+Sidebar.Parent = MainFrame
+
+local SidebarCorner = Instance.new("UICorner")
+SidebarCorner.CornerRadius = UDim.new(0, LunoraHub.Config.CornerRadius)
+SidebarCorner.Parent = Sidebar
+
+local SidebarGradient = Instance.new("UIGradient")
+SidebarGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(6, 6, 6)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(4, 4, 4))
+}
+SidebarGradient.Rotation = 90
+SidebarGradient.Parent = Sidebar
+
+local SidebarStroke = Instance.new("UIStroke")
+SidebarStroke.Color = LunoraHub.Config.PrimaryColor
+SidebarStroke.Thickness = 1
+SidebarStroke.Transparency = 0.5
+SidebarStroke.Parent = Sidebar
+
+-- Title
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Size = UDim2.new(1, -15, 0, 34)
+Title.Position = UDim2.new(0, 10, 0, 8)
+Title.BackgroundTransparency = 1
+Title.Text = LunoraHub.Config.WindowName
+Title.TextColor3 = LunoraHub.Config.PrimaryColor
+Title.TextSize = 22
+Title.Font = Enum.Font.Bangers
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.TextStrokeTransparency = 1
+Title.Parent = Sidebar
+
+local Subtitle = Instance.new("TextLabel")
+Subtitle.Name = "Subtitle"
+Subtitle.Size = UDim2.new(1, -15, 0, 16)
+Subtitle.Position = UDim2.new(0, 10, 0, 46)
+Subtitle.BackgroundTransparency = 1
+Subtitle.Text = "UI Library"
+Subtitle.TextColor3 = Color3.fromRGB(170, 190, 210)
+Subtitle.TextSize = 12
+Subtitle.Font = Enum.Font.SourceSans
+Subtitle.TextXAlignment = Enum.TextXAlignment.Left
+Subtitle.Parent = Sidebar
+
+-- Tab Container
+local TabContainer = Instance.new("ScrollingFrame")
+TabContainer.Name = "TabContainer"
+TabContainer.Size = UDim2.new(1, -15, 1, -130)
+TabContainer.Position = UDim2.new(0, 8, 0, 70)
+TabContainer.BackgroundTransparency = 1
+TabContainer.BorderSizePixel = 0
+TabContainer.ScrollBarThickness = 3
+TabContainer.ScrollBarImageColor3 = Color3.fromRGB(150, 30, 30)
+TabContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
+TabContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
+TabContainer.Parent = Sidebar
+
+local TabLayout = Instance.new("UIListLayout")
+TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+TabLayout.Padding = UDim.new(0, 6)
+TabLayout.Parent = TabContainer
+
+-- Discord Label
+local DiscordLabel = Instance.new("TextLabel")
+DiscordLabel.Name = "DiscordLabel"
+DiscordLabel.Size = UDim2.new(1, -20, 0, 40)
+DiscordLabel.Position = UDim2.new(0, 10, 1, -50)
+DiscordLabel.BackgroundTransparency = 1
+DiscordLabel.Text = "Lunora Hub"
+DiscordLabel.TextColor3 = Color3.fromRGB(200, 210, 220)
+DiscordLabel.TextSize = 12
+DiscordLabel.Font = Enum.Font.SourceSansBold
+DiscordLabel.TextXAlignment = Enum.TextXAlignment.Center
+DiscordLabel.TextYAlignment = Enum.TextYAlignment.Center
+DiscordLabel.Parent = Sidebar
+
+-- Content Area
+local ContentArea = Instance.new("Frame")
+ContentArea.Name = "ContentArea"
+ContentArea.Size = UDim2.new(1, -(LunoraHub.Config.TabWidth + 15), 1, -15)
+ContentArea.Position = UDim2.new(0, LunoraHub.Config.TabWidth + 8, 0, 8)
+ContentArea.BackgroundTransparency = 1
+ContentArea.Parent = MainFrame
+
+-- Close Button
+local CloseButton = Instance.new("TextButton")
+CloseButton.Name = "CloseButton"
+CloseButton.Size = UDim2.new(0, 25, 0, 25)
+CloseButton.Position = UDim2.new(1, -35, 0, 8)
+CloseButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+CloseButton.Text = "X"
+CloseButton.TextColor3 = LunoraHub.Config.PrimaryColor
+CloseButton.TextSize = 16
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.Parent = MainFrame
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 6)
+CloseCorner.Parent = CloseButton
+
+local CloseStroke = Instance.new("UIStroke")
+CloseStroke.Color = LunoraHub.Config.PrimaryColor
+CloseStroke.Thickness = 1
+CloseStroke.Transparency = 0.5
+CloseStroke.Parent = CloseButton
+
+-- Draggable Function
+local function MakeDraggable(frame)
+    local dragging
+    local dragInput
+    local dragStart
+    local startPos
+    local function update(input)
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+end
+
+MakeDraggable(MainFrame)
+
+-- Close Button Functionality
+CloseButton.MouseButton1Click:Connect(function()
+    TweenService:Create(CloseButton, TweenInfo.new(0.1), {
+        BackgroundColor3 = Color3.fromRGB(10, 10, 10),
+        Rotation = 90
+    }):Play()
+    local shrinkTween = TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+        Size = UDim2.new(0, 0, 0, 0),
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        Rotation = 180
+    })
+    local fadeTween = TweenService:Create(MainFrame, TweenInfo.new(0.3), {
+        BackgroundTransparency = 1
+    })
+    shrinkTween:Play()
+    fadeTween:Play()
+    shrinkTween.Completed:Connect(function()
+        wait(0.1)
+        ScreenGui:Destroy()
+    end)
+end)
+
+-- Tab Creation Function
+function LunoraHub:CreateTab(tabName, layoutOrder)
+    local TabButton = Instance.new("TextButton")
+    TabButton.Name = tabName
+    TabButton.Size = UDim2.new(1, 0, 0, 35)
+    TabButton.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+    TabButton.Text = tabName
+    TabButton.TextColor3 = Color3.fromRGB(170, 190, 210)
+    TabButton.TextSize = 13
+    TabButton.Font = Enum.Font.SourceSansSemibold
+    TabButton.TextXAlignment = Enum.TextXAlignment.Left
+    TabButton.LayoutOrder = layoutOrder
+    TabButton.Parent = TabContainer
+    
+    local TabPadding = Instance.new("UIPadding")
+    TabPadding.PaddingLeft = UDim.new(0, 12)
+    TabPadding.Parent = TabButton
+    
+    local TabCorner = Instance.new("UICorner")
+    TabCorner.CornerRadius = UDim.new(0, 5)
+    TabCorner.Parent = TabButton
+    
+    local TabStroke = Instance.new("UIStroke")
+    TabStroke.Color = LunoraHub.Config.PrimaryColor
+    TabStroke.Thickness = 1
+    TabStroke.Transparency = 0.6
+    TabStroke.Parent = TabButton
+    
+    local TabContent = Instance.new("ScrollingFrame")
+    TabContent.Name = tabName .. "Content"
+    TabContent.Size = UDim2.new(1, 0, 1, 0)
+    TabContent.BackgroundTransparency = 1
+    TabContent.BorderSizePixel = 0
+    TabContent.ScrollBarThickness = 4
+    TabContent.ScrollBarImageColor3 = Color3.fromRGB(150, 30, 30)
+    TabContent.Visible = false
+    TabContent.CanvasSize = UDim2.new(0, 0, 0, 0)
+    TabContent.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    TabContent.ScrollingDirection = Enum.ScrollingDirection.Y
+    TabContent.Parent = ContentArea
+    
+    local ContentLayout = Instance.new("UIListLayout")
+    ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    ContentLayout.Padding = UDim.new(0, 8)
+    ContentLayout.Parent = TabContent
+    
+    local ContentPadding = Instance.new("UIPadding")
+    ContentPadding.PaddingTop = UDim.new(0, 8)
+    ContentPadding.PaddingLeft = UDim.new(0, 8)
+    ContentPadding.PaddingRight = UDim.new(0, 8)
+    ContentPadding.PaddingBottom = UDim.new(0, 8)
+    ContentPadding.Parent = TabContent
+    
+    TabButton.MouseButton1Click:Connect(function()
+        for _, child in pairs(ContentArea:GetChildren()) do
+            if child:IsA("ScrollingFrame") then
+                child.Visible = false
+            end
+        end
+        
+        for _, btn in pairs(TabContainer:GetChildren()) do
+            if btn:IsA("TextButton") then
+                TweenService:Create(btn, TweenInfo.new(0.2), {
+                    BackgroundColor3 = Color3.fromRGB(10, 10, 10),
+                    TextColor3 = Color3.fromRGB(170, 190, 210)
+                }):Play()
+                local stroke = btn:FindFirstChild("UIStroke")
+                if stroke then
+                    TweenService:Create(stroke, TweenInfo.new(0.2), {
+                        Transparency = 0.6
+                    }):Play()
+                end
+            end
+        end
+        
+        TabContent.Visible = true
+        TweenService:Create(TabButton, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(22, 30, 40),
+            TextColor3 = Color3.fromRGB(220, 230, 255)
+        }):Play()
+        TweenService:Create(TabStroke, TweenInfo.new(0.2), {
+            Transparency = 0.3
+        }):Play()
+    end)
+    
+    if layoutOrder == 1 then
+        TabContent.Visible = true
+        TabButton.BackgroundColor3 = Color3.fromRGB(22, 30, 40)
+        TabButton.TextColor3 = Color3.fromRGB(220, 230, 255)
+        TabStroke.Transparency = 0.3
+    end
+    
+    return TabContent
+end
+
+-- Toggle Creation Function
+function LunoraHub:CreateToggle(parent, buttonName, callback)
+    local ToggleFrame = Instance.new("Frame")
+    ToggleFrame.Name = buttonName
+    ToggleFrame.Size = UDim2.new(1, -15, 0, 38)
+    ToggleFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+    ToggleFrame.Parent = parent
+    
+    local ToggleCorner = Instance.new("UICorner")
+    ToggleCorner.CornerRadius = UDim.new(0, 5)
+    ToggleCorner.Parent = ToggleFrame
+    
+    local ToggleStroke = Instance.new("UIStroke")
+    ToggleStroke.Color = LunoraHub.Config.PrimaryColor
+    ToggleStroke.Thickness = 1
+    ToggleStroke.Transparency = 0.6
+    ToggleStroke.Parent = ToggleFrame
+    
+    local ToggleLabel = Instance.new("TextLabel")
+    ToggleLabel.Size = UDim2.new(1, -55, 1, 0)
+    ToggleLabel.Position = UDim2.new(0, 12, 0, 0)
+    ToggleLabel.BackgroundTransparency = 1
+    ToggleLabel.Text = buttonName
+    ToggleLabel.TextColor3 = Color3.fromRGB(170, 190, 210)
+    ToggleLabel.TextSize = 12
+    ToggleLabel.Font = Enum.Font.SourceSans
+    ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    ToggleLabel.Parent = ToggleFrame
+    
+    local ToggleButton = Instance.new("TextButton")
+    ToggleButton.Size = UDim2.new(0, 35, 0, 18)
+    ToggleButton.Position = UDim2.new(1, -43, 0.5, -9)
+    ToggleButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    ToggleButton.Text = ""
+    ToggleButton.Parent = ToggleFrame
+    
+    local ToggleBtnCorner = Instance.new("UICorner")
+    ToggleBtnCorner.CornerRadius = UDim.new(1, 0)
+    ToggleBtnCorner.Parent = ToggleButton
+    
+    local ToggleBtnStroke = Instance.new("UIStroke")
+    ToggleBtnStroke.Color = LunoraHub.Config.PrimaryColor
+    ToggleBtnStroke.Thickness = 1
+    ToggleBtnStroke.Transparency = 0.5
+    ToggleBtnStroke.Parent = ToggleButton
+    
+    local ToggleIndicator = Instance.new("Frame")
+    ToggleIndicator.Size = UDim2.new(0, 14, 0, 14)
+    ToggleIndicator.Position = UDim2.new(0, 2, 0.5, -7)
+    ToggleIndicator.BackgroundColor3 = Color3.fromRGB(120, 120, 120)
+    ToggleIndicator.Parent = ToggleButton
+    
+    local IndicatorCorner = Instance.new("UICorner")
+    IndicatorCorner.CornerRadius = UDim.new(1, 0)
+    IndicatorCorner.Parent = ToggleIndicator
+    
+    local toggled = false
+    
+    ToggleButton.MouseButton1Click:Connect(function()
+        toggled = not toggled
+        TweenService:Create(ToggleFrame, TweenInfo.new(0.1), {
+            BackgroundColor3 = Color3.fromRGB(14, 14, 14)
+        }):Play()
+        wait(0.05)
+        TweenService:Create(ToggleFrame, TweenInfo.new(0.1), {
+            BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+        }):Play()
+        
+        if toggled then
+            TweenService:Create(ToggleIndicator, TweenInfo.new(0.2, Enum.EasingStyle.Back), {
+                Position = UDim2.new(1, -16, 0.5, -7)
+            }):Play()
+            TweenService:Create(ToggleButton, TweenInfo.new(0.2), {
+                BackgroundColor3 = LunoraHub.Config.PrimaryColor
+            }):Play()
+            TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(220, 230, 255)
+            }):Play()
+            TweenService:Create(ToggleStroke, TweenInfo.new(0.2), {
+                Color = LunoraHub.Config.PrimaryColor,
+                Transparency = 0.3
+            }):Play()
+        else
+            TweenService:Create(ToggleIndicator, TweenInfo.new(0.2, Enum.EasingStyle.Back), {
+                Position = UDim2.new(0, 2, 0.5, -7)
+            }):Play()
+            TweenService:Create(ToggleButton, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+            }):Play()
+            TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(120, 120, 120)
+            }):Play()
+            TweenService:Create(ToggleStroke, TweenInfo.new(0.2), {
+                Color = LunoraHub.Config.PrimaryColor,
+                Transparency = 0.6
+            }):Play()
+        end
+        
+        if callback then
+            callback(toggled)
+        end
+    end)
+end
+
+-- Button Creation Function
+function LunoraHub:CreateButton(parent, buttonName, callback, isRed)
+    local ButtonFrame = Instance.new("Frame")
+    ButtonFrame.Name = buttonName
+    ButtonFrame.Size = UDim2.new(1, -15, 0, 38)
+    local baseColor = isRed and Color3.fromRGB(30, 60, 120) or Color3.fromRGB(10, 10, 10)
+    ButtonFrame.BackgroundColor3 = baseColor
+    ButtonFrame.Parent = parent
+    
+    local ButtonCorner = Instance.new("UICorner")
+    ButtonCorner.CornerRadius = UDim.new(0, 5)
+    ButtonCorner.Parent = ButtonFrame
+    
+    local ButtonStroke = Instance.new("UIStroke")
+    ButtonStroke.Color = LunoraHub.Config.PrimaryColor
+    ButtonStroke.Thickness = 1
+    ButtonStroke.Transparency = 0.5
+    ButtonStroke.Parent = ButtonFrame
+    
+    local Button = Instance.new("TextButton")
+    Button.Size = UDim2.new(1, 0, 1, 0)
+    Button.BackgroundTransparency = 1
+    Button.Text = buttonName
+    Button.TextColor3 = Color3.fromRGB(200, 210, 220)
+    Button.TextSize = 12
+    Button.Font = Enum.Font.SourceSansBold
+    Button.Parent = ButtonFrame
+    
+    Button.MouseButton1Click:Connect(function()
+        TweenService:Create(ButtonFrame, TweenInfo.new(0.1, Enum.EasingStyle.Back), {
+            BackgroundColor3 = Color3.fromRGB(30, 40, 70),
+            Size = UDim2.new(1, -20, 0, 36)
+        }):Play()
+        TweenService:Create(ButtonStroke, TweenInfo.new(0.1), {
+            Thickness = 2,
+            Color = Color3.fromRGB(80, 170, 255)
+        }):Play()
+        TweenService:Create(Button, TweenInfo.new(0.1), { Rotation = 5 }):Play()
+        
+        wait(0.1)
+        
+        TweenService:Create(ButtonFrame, TweenInfo.new(0.15, Enum.EasingStyle.Back), {
+            BackgroundColor3 = baseColor,
+            Size = UDim2.new(1, -15, 0, 38)
+        }):Play()
+        TweenService:Create(ButtonStroke, TweenInfo.new(0.15), {
+            Thickness = 1,
+            Color = LunoraHub.Config.PrimaryColor
+        }):Play()
+        TweenService:Create(Button, TweenInfo.new(0.15), { Rotation = 0 }):Play()
+        
+        if callback then
+            callback()
+        end
+    end)
+end
+
+-- Section Creation Function
+function LunoraHub:CreateSection(parent, sectionName)
+    local SectionLabel = Instance.new("TextLabel")
+    SectionLabel.Name = sectionName
+    SectionLabel.Size = UDim2.new(1, -15, 0, 25)
+    SectionLabel.BackgroundTransparency = 1
+    SectionLabel.Text = sectionName
+    SectionLabel.TextColor3 = Color3.fromRGB(200, 210, 220)
+    SectionLabel.TextSize = 14
+    SectionLabel.Font = Enum.Font.SourceSansBold
+    SectionLabel.TextXAlignment = Enum.TextXAlignment.Left
+    SectionLabel.TextStrokeTransparency = 1
+    SectionLabel.Parent = parent
+end
+
+print("Lunora Hub UI Library Loaded Successfully")
+return LunoraHub
