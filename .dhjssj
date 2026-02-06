@@ -1,4 +1,4 @@
--- Lunora Hub UI Library - Complete Version with Key System
+-- ✨ Lunora Hub UI Library - Complete Working Version ✨
 local LunoraHub = {}
 LunoraHub.Config = {
     -- Window Settings
@@ -32,14 +32,13 @@ LunoraHub.Config = {
     NotificationTitle = "Lunora Hub",
     NotificationText = "Key System Loaded",
     NotificationDuration = 4,
-    NotificationImageId = "rbxassetid://0", -- Set your image ID here
+    NotificationImageId = "rbxassetid://0",
 }
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 local TextService = game:GetService("TextService")
 local StarterGui = game:GetService("StarterGui")
@@ -47,18 +46,23 @@ local Lighting = game:GetService("Lighting")
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
-local Camera = Workspace.CurrentCamera
 
--- Set global colors for component use
+-- Set global colors
 _G.Primary = LunoraHub.Config.PrimaryColor
 _G.Dark = LunoraHub.Config.DarkColor
 
--- Clean up any existing GUIs
+-- Clean up existing GUIs
 local function CleanupExistingGUI()
-    local GUI = game:GetService("CoreGui"):FindFirstChild("OpenClose")
-    if GUI then GUI:Destroy() end
-    local GUI1 = game:GetService("CoreGui"):FindFirstChild("LunoraHubScreen")
-    if GUI1 then GUI1:Destroy() end
+    pcall(function()
+        local GUI = PlayerGui:FindFirstChild("LunoraHubScreen")
+        if GUI then GUI:Destroy() end
+        local GUI1 = PlayerGui:FindFirstChild("OpenClose")
+        if GUI1 then GUI1:Destroy() end
+        local GUI2 = PlayerGui:FindFirstChild("LunoraKeySystem")
+        if GUI2 then GUI2:Destroy() end
+        local GUI3 = PlayerGui:FindFirstChild("LunoraIntro")
+        if GUI3 then GUI3:Destroy() end
+    end)
 end
 CleanupExistingGUI()
 
@@ -131,8 +135,8 @@ local function playIntro(onFinish)
     TweenService:Create(blur, TweenInfo.new(0.4), {Size = 0}):Play()
 
     task.wait(0.5)
-    gui:Destroy()
-    blur:Destroy()
+    pcall(function() gui:Destroy() end)
+    pcall(function() blur:Destroy() end)
 
     if onFinish then
         onFinish()
@@ -140,7 +144,7 @@ local function playIntro(onFinish)
 end
 
 -- 🧠 KEY SYSTEM GUI
-local function createKeySystemGUI()
+function LunoraHub:CreateKeySystemGUI()
     if PlayerGui:FindFirstChild("LunoraKeySystem") then
         PlayerGui.LunoraKeySystem:Destroy()
     end
@@ -163,7 +167,7 @@ local function createKeySystemGUI()
     stroke.Color = LunoraHub.Config.PrimaryColor
     stroke.Thickness = 2
 
-    -- 🔵 MATRIX BACKGROUND (INSIDE UI)
+    -- 🔵 MATRIX BACKGROUND
     local matrixHolder = Instance.new("Frame", frame)
     matrixHolder.Size = UDim2.new(1, 0, 1, 0)
     matrixHolder.BackgroundTransparency = 1
@@ -217,7 +221,7 @@ local function createKeySystemGUI()
     keyInput.ZIndex = 2
     Instance.new("UICorner", keyInput).CornerRadius = UDim.new(0, 10)
 
-    -- Submit Button (BLUE)
+    -- Submit Button
     local submitBtn = Instance.new("TextButton", frame)
     submitBtn.Size = UDim2.new(0.4, 0, 0, 35)
     submitBtn.Position = UDim2.new(0.075, 0, 0, 130)
@@ -230,7 +234,7 @@ local function createKeySystemGUI()
     submitBtn.ZIndex = 2
     Instance.new("UICorner", submitBtn).CornerRadius = UDim.new(0, 10)
 
-    -- Get Key Button (RED)
+    -- Get Key Button
     local getKeyBtn = Instance.new("TextButton", frame)
     getKeyBtn.Size = UDim2.new(0.4, 0, 0, 35)
     getKeyBtn.Position = UDim2.new(0.525, 0, 0, 130)
@@ -254,7 +258,7 @@ local function createKeySystemGUI()
     status.TextSize = 14
     status.ZIndex = 2
 
-    -- Logic
+    -- Submit Logic
     submitBtn.MouseButton1Click:Connect(function()
         local key = keyInput.Text:gsub("%s+", "")
 
@@ -286,34 +290,16 @@ local function createKeySystemGUI()
         end)
         status.Text = "Key link copied!"
     end)
-
-    return screenGui
-end
-
--- Send Notification
-local function SendNotification()
-    if LunoraHub.Config.NotificationEnabled then
-        pcall(function()
-            StarterGui:SetCore("SendNotification", {
-                Title = LunoraHub.Config.NotificationTitle,
-                Text = LunoraHub.Config.NotificationText,
-                Duration = LunoraHub.Config.NotificationDuration,
-                Icon = LunoraHub.Config.NotificationImageId,
-            })
-        end)
-    end
 end
 
 -- Initialize Main UI
 function LunoraHub:InitializeUI()
-    -- Main GUI Setup
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "LunoraHubScreen"
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.Parent = PlayerGui
 
-    -- Open/Close Button (Style from lunora_hub_openclose.lua)
     local OpenCloseGui = Instance.new("ScreenGui")
     OpenCloseGui.Name = "OpenClose"
     OpenCloseGui.ResetOnSpawn = false
@@ -324,14 +310,13 @@ function LunoraHub:InitializeUI()
     CloseOpenButton.Parent = OpenCloseGui
     CloseOpenButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     CloseOpenButton.BorderColor3 = LunoraHub.Config.PrimaryColor
-    CloseOpenButton.Position = UDim2.new(0.1021, 0, 0.0743, 0)
+    CloseOpenButton.Position = UDim2.new(0.02, 0, 0.04, 0)
     CloseOpenButton.Size = UDim2.new(0, 48, 0, 48)
     CloseOpenButton.Image = "rbxassetid://110198609281800"
     CloseOpenButton.Visible = true
     CloseOpenButton.ZIndex = 100
 
     local UICornerButton = Instance.new("UICorner")
-    UICornerButton.Name = "MainCorner"
     UICornerButton.CornerRadius = UDim.new(1, 0)
     UICornerButton.Parent = CloseOpenButton
 
@@ -341,7 +326,7 @@ function LunoraHub:InitializeUI()
     UIStrokeButton.Transparency = 0.3
     UIStrokeButton.Parent = CloseOpenButton
 
-    -- Pulsing effect for Close/Open button
+    -- Pulsing effect
     spawn(function()
         while wait(0.03) do
             if CloseOpenButton and CloseOpenButton.Parent then
@@ -352,7 +337,7 @@ function LunoraHub:InitializeUI()
         end
     end)
 
-    -- Draggable Close/Open Button
+    -- Draggable function
     local function MakeDraggable(frame)
         local dragging = false
         local dragStart = nil
@@ -416,26 +401,21 @@ function LunoraHub:InitializeUI()
     GlowBorder.Transparency = LunoraHub.Config.Transparency
     GlowBorder.Parent = MainFrame
 
-    -- Pulsing Glow Effect
-    local glowRotation = 0
-    RunService.RenderStepped:Connect(function(delta)
-        if not MainFrame.Visible then return end
-        glowRotation = glowRotation + (delta * 50)
-        if glowRotation >= 360 then glowRotation = 0 end
-        local pulse = math.abs(math.sin(tick() * 2))
-        GlowBorder.Transparency = 0.25 + (pulse * 0.25)
-        GlowBorder.Thickness = 2 + (pulse * 1)
-        local r = 60
-        local g = math.floor(130 + (pulse * 80))
-        local b = 255
-        GlowBorder.Color = Color3.fromRGB(r, g, b)
+    -- Pulsing Glow
+    spawn(function()
+        while wait(0.03) do
+            if MainFrame and MainFrame.Parent then
+                local pulse = math.abs(math.sin(tick() * 2))
+                GlowBorder.Transparency = 0.25 + (pulse * 0.25)
+                GlowBorder.Thickness = 2 + (pulse * 1)
+            end
+        end
     end)
 
     -- Sidebar
     local Sidebar = Instance.new("Frame")
     Sidebar.Name = "Sidebar"
     Sidebar.Size = UDim2.new(0, LunoraHub.Config.TabWidth, 1, 0)
-    Sidebar.Position = UDim2.new(0, 0, 0, 0)
     Sidebar.BackgroundColor3 = LunoraHub.Config.SecondaryColor
     Sidebar.BorderSizePixel = 0
     Sidebar.Parent = MainFrame
@@ -452,15 +432,8 @@ function LunoraHub:InitializeUI()
     SidebarGradient.Rotation = 90
     SidebarGradient.Parent = Sidebar
 
-    local SidebarStroke = Instance.new("UIStroke")
-    SidebarStroke.Color = LunoraHub.Config.PrimaryColor
-    SidebarStroke.Thickness = 1
-    SidebarStroke.Transparency = 0.5
-    SidebarStroke.Parent = Sidebar
-
-    -- Title (Bangers Font)
+    -- Title
     local Title = Instance.new("TextLabel")
-    Title.Name = "Title"
     Title.Size = UDim2.new(1, -15, 0, 34)
     Title.Position = UDim2.new(0, 10, 0, 8)
     Title.BackgroundTransparency = 1
@@ -469,12 +442,10 @@ function LunoraHub:InitializeUI()
     Title.TextSize = 22
     Title.Font = Enum.Font.Bangers
     Title.TextXAlignment = Enum.TextXAlignment.Left
-    Title.TextStrokeTransparency = 1
     Title.Parent = Sidebar
 
-    -- Subtitle (Bangers Font - Customizable)
+    -- Subtitle
     local Subtitle = Instance.new("TextLabel")
-    Subtitle.Name = "Subtitle"
     Subtitle.Size = UDim2.new(1, -15, 0, 16)
     Subtitle.Position = UDim2.new(0, 10, 0, 46)
     Subtitle.BackgroundTransparency = 1
@@ -487,7 +458,6 @@ function LunoraHub:InitializeUI()
 
     -- Tab Container
     local TabContainer = Instance.new("ScrollingFrame")
-    TabContainer.Name = "TabContainer"
     TabContainer.Size = UDim2.new(1, -15, 1, -130)
     TabContainer.Position = UDim2.new(0, 8, 0, 70)
     TabContainer.BackgroundTransparency = 1
@@ -503,32 +473,29 @@ function LunoraHub:InitializeUI()
     TabLayout.Padding = UDim.new(0, 6)
     TabLayout.Parent = TabContainer
 
-    -- Discord Label (Bangers Font)
-    local DiscordLabel = Instance.new("TextLabel")
-    DiscordLabel.Name = "DiscordLabel"
-    DiscordLabel.Size = UDim2.new(1, -20, 0, 40)
-    DiscordLabel.Position = UDim2.new(0, 10, 1, -50)
-    DiscordLabel.BackgroundTransparency = 1
-    DiscordLabel.Text = "Lunora Hub"
-    DiscordLabel.TextColor3 = Color3.fromRGB(200, 210, 220)
-    DiscordLabel.TextSize = 12
-    DiscordLabel.Font = Enum.Font.Bangers
-    DiscordLabel.TextXAlignment = Enum.TextXAlignment.Center
-    DiscordLabel.TextYAlignment = Enum.TextYAlignment.Center
-    DiscordLabel.Parent = Sidebar
+    -- Footer Label
+    local FooterLabel = Instance.new("TextLabel")
+    FooterLabel.Size = UDim2.new(1, -20, 0, 40)
+    FooterLabel.Position = UDim2.new(0, 10, 1, -50)
+    FooterLabel.BackgroundTransparency = 1
+    FooterLabel.Text = "Lunora Hub"
+    FooterLabel.TextColor3 = Color3.fromRGB(200, 210, 220)
+    FooterLabel.TextSize = 12
+    FooterLabel.Font = Enum.Font.Bangers
+    FooterLabel.TextXAlignment = Enum.TextXAlignment.Center
+    FooterLabel.TextYAlignment = Enum.TextYAlignment.Center
+    FooterLabel.Parent = Sidebar
 
     -- Content Area
     local ContentArea = Instance.new("Frame")
-    ContentArea.Name = "ContentArea"
     ContentArea.Size = UDim2.new(1, -(LunoraHub.Config.TabWidth + 15), 1, -15)
     ContentArea.Position = UDim2.new(0, LunoraHub.Config.TabWidth + 8, 0, 8)
     ContentArea.BackgroundTransparency = 1
     ContentArea.Parent = MainFrame
 
-    -- Draggable Main Window
+    -- Make main frame draggable
     local function MakeDraggableWindow(frame)
         local dragging = false
-        local dragInput = nil
         local dragStart = nil
         local startPos = nil
         
@@ -553,50 +520,43 @@ function LunoraHub:InitializeUI()
         
         frame.InputChanged:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-                dragInput = input
-            end
-        end)
-        
-        UserInputService.InputChanged:Connect(function(input)
-            if input == dragInput and dragging then
-                update(input)
+                if dragging and dragStart then
+                    update(input)
+                end
             end
         end)
     end
 
     MakeDraggableWindow(MainFrame)
 
-    -- Close/Open Button Functionality
+    -- Toggle functionality
     local mainWindowVisible = true
 
     CloseOpenButton.MouseButton1Click:Connect(function()
         mainWindowVisible = not mainWindowVisible
         
         if mainWindowVisible then
-            -- Show window
             ScreenGui.Enabled = true
             TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
                 Size = UDim2.new(0, LunoraHub.Config.WindowWidth, 0, LunoraHub.Config.WindowHeight)
             }):Play()
         else
-            -- Hide window
             TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
                 Size = UDim2.new(0, 0, 0, 0)
             }):Play()
-            delay(0.3, function()
-                ScreenGui.Enabled = false
-            end)
+            task.wait(0.3)
+            ScreenGui.Enabled = false
         end
     end)
 
-    -- Store references for later use
+    -- Store references
     LunoraHub.ScreenGui = ScreenGui
     LunoraHub.MainFrame = MainFrame
     LunoraHub.ContentArea = ContentArea
     LunoraHub.TabContainer = TabContainer
 end
 
--- Tab Creation Function with Icons (Bangers Font)
+-- Create Tab
 function LunoraHub:CreateTab(tabName, layoutOrder, iconId)
     iconId = iconId or "rbxassetid://0"
     
@@ -618,7 +578,6 @@ function LunoraHub:CreateTab(tabName, layoutOrder, iconId)
     TabStroke.Transparency = 0.6
     TabStroke.Parent = TabButton
     
-    -- Icon
     local IconLabel = Instance.new("ImageLabel")
     IconLabel.Name = "Icon"
     IconLabel.Parent = TabButton
@@ -628,7 +587,6 @@ function LunoraHub:CreateTab(tabName, layoutOrder, iconId)
     IconLabel.Image = iconId
     IconLabel.ImageColor3 = Color3.fromRGB(170, 190, 210)
     
-    -- Tab Name (Bangers Font)
     local TabLabel = Instance.new("TextLabel")
     TabLabel.Name = "Label"
     TabLabel.Parent = TabButton
@@ -691,9 +649,9 @@ function LunoraHub:CreateTab(tabName, layoutOrder, iconId)
                         ImageColor3 = Color3.fromRGB(170, 190, 210)
                     }):Play()
                 end
-                local stroke = btn:FindFirstChild("UIStroke")
-                if stroke then
-                    TweenService:Create(stroke, TweenInfo.new(0.2), {
+                local stk = btn:FindFirstChild("UIStroke")
+                if stk then
+                    TweenService:Create(stk, TweenInfo.new(0.2), {
                         Transparency = 0.6
                     }):Play()
                 end
@@ -726,7 +684,7 @@ function LunoraHub:CreateTab(tabName, layoutOrder, iconId)
     return TabContent
 end
 
--- Button Creation Function (Exact Style from Example - Bangers Font)
+-- Create Button
 function LunoraHub:CreateButton(parent, buttonName, callback)
     local frame = Instance.new("Frame")
     frame.Name = "Button"
@@ -781,7 +739,7 @@ function LunoraHub:CreateButton(parent, buttonName, callback)
     end)
 end
 
--- Toggle Creation Function (Bangers Font)
+-- Create Toggle
 function LunoraHub:CreateToggle(parent, buttonName, callback)
     local ToggleFrame = Instance.new("Frame")
     ToggleFrame.Name = buttonName
@@ -844,7 +802,7 @@ function LunoraHub:CreateToggle(parent, buttonName, callback)
         TweenService:Create(ToggleFrame, TweenInfo.new(0.1), {
             BackgroundColor3 = Color3.fromRGB(14, 14, 14)
         }):Play()
-        wait(0.05)
+        task.wait(0.05)
         TweenService:Create(ToggleFrame, TweenInfo.new(0.1), {
             BackgroundColor3 = Color3.fromRGB(10, 10, 10)
         }):Play()
@@ -885,7 +843,7 @@ function LunoraHub:CreateToggle(parent, buttonName, callback)
     end)
 end
 
--- Section Creation Function (Bangers Font)
+-- Create Section
 function LunoraHub:CreateSection(parent, sectionName)
     local SectionLabel = Instance.new("TextLabel")
     SectionLabel.Name = sectionName
@@ -896,11 +854,45 @@ function LunoraHub:CreateSection(parent, sectionName)
     SectionLabel.TextSize = 14
     SectionLabel.Font = Enum.Font.Bangers
     SectionLabel.TextXAlignment = Enum.TextXAlignment.Left
-    SectionLabel.TextStrokeTransparency = 1
     SectionLabel.Parent = parent
 end
 
--- Dropdown Creation Function (Bangers Font)
+-- Create Separator
+function LunoraHub:CreateSeparator(parent, text)
+    local sp = Instance.new("Frame")
+    sp.Name = "Separator"
+    sp.Parent = parent
+    sp.BackgroundTransparency = 1
+    sp.Size = UDim2.new(1, 0, 0, 36)
+
+    local title = Instance.new("TextLabel")
+    title.Parent = sp
+    title.BackgroundTransparency = 1
+    title.AnchorPoint = Vector2.new(0.5, 1)
+    title.Position = UDim2.new(0.5, 0, 0, 30)
+    title.Size = UDim2.new(1, 0, 0, 36)
+    title.Font = Enum.Font.Bangers
+    title.Text = text
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.TextSize = 14
+
+    local bar = Instance.new("Frame")
+    bar.Parent = sp
+    bar.BackgroundColor3 = LunoraHub.Config.PrimaryColor
+    bar.BackgroundTransparency = 0
+    bar.BorderSizePixel = 0
+    bar.AnchorPoint = Vector2.new(0.5, 0.5)
+    bar.Position = UDim2.new(0.5, 0, 0, 25)
+    bar.Size = UDim2.new(0, 39, 0, 3)
+    local bcorner = Instance.new("UICorner")
+    bcorner.Parent = bar
+    bcorner.CornerRadius = UDim.new(0, math.huge)
+
+    local textSize = TextService:GetTextSize(title.Text, title.TextSize, title.Font, Vector2.new(1e6, 1e6))
+    bar.Size = UDim2.new(0, textSize.X * 0.7, 0, 3)
+end
+
+-- Create Dropdown
 function LunoraHub:CreateDropdown(parent, titleText, items, defaultText, onSelect)
     items = items or {}
     local selected = defaultText or "Select Items"
@@ -919,7 +911,6 @@ function LunoraHub:CreateDropdown(parent, titleText, items, defaultText, onSelec
 
     local label = Instance.new("TextLabel")
     label.Parent = frame
-    label.Name = "DropTitle"
     label.BackgroundTransparency = 1
     label.Size = UDim2.new(1, 0, 0, 30)
     label.Font = Enum.Font.Bangers
@@ -931,7 +922,6 @@ function LunoraHub:CreateDropdown(parent, titleText, items, defaultText, onSelec
 
     local selectBtn = Instance.new("TextButton")
     selectBtn.Parent = frame
-    selectBtn.Name = "SelectItems"
     selectBtn.BackgroundColor3 = LunoraHub.Config.DarkColor
     selectBtn.BackgroundTransparency = 0.1
     selectBtn.Position = UDim2.new(1, -5, 0, 5)
@@ -948,13 +938,11 @@ function LunoraHub:CreateDropdown(parent, titleText, items, defaultText, onSelec
     selectCorner.CornerRadius = UDim.new(0, 6)
 
     local listFrame = Instance.new("Frame")
-    listFrame.Name = "DropdownFrameScroll"
     listFrame.Parent = frame
     listFrame.BackgroundColor3 = LunoraHub.Config.DarkColor
     listFrame.BackgroundTransparency = 0
     listFrame.Size = UDim2.new(1, -10, 0, 0)
     listFrame.Position = UDim2.new(0, 5, 0, collapsedHeight)
-    listFrame.AnchorPoint = Vector2.new(0, 0)
     listFrame.ClipsDescendants = false
     listFrame.Visible = false
     local lfCorner = Instance.new("UICorner")
@@ -962,7 +950,6 @@ function LunoraHub:CreateDropdown(parent, titleText, items, defaultText, onSelec
     lfCorner.CornerRadius = UDim.new(0, 6)
 
     local listScroll = Instance.new("ScrollingFrame")
-    listScroll.Name = "DropScroll"
     listScroll.Parent = listFrame
     listScroll.Active = true
     listScroll.BackgroundTransparency = 1
@@ -1003,44 +990,24 @@ function LunoraHub:CreateDropdown(parent, titleText, items, defaultText, onSelec
         itemCorner.Parent = itemBtn
         itemCorner.CornerRadius = UDim.new(0, 6)
 
-        local selIndicator = Instance.new("Frame")
-        selIndicator.Name = "SelectedItems"
-        selIndicator.Parent = itemBtn
-        selIndicator.BackgroundColor3 = LunoraHub.Config.PrimaryColor
-        selIndicator.BackgroundTransparency = 1
-        selIndicator.Size = UDim2.new(0, 3, 0.4, 0)
-        selIndicator.Position = UDim2.new(0, -8, 0.5, 0)
-        selIndicator.AnchorPoint = Vector2.new(0, 0.5)
-        selIndicator.ZIndex = 4
-        local selCorner = Instance.new("UICorner")
-        selCorner.Parent = selIndicator
-        selCorner.CornerRadius = UDim.new(0, 6)
-
         itemBtn.MouseEnter:Connect(function()
             TweenService:Create(itemBtn, TweenInfo.new(0.12), {TextTransparency = 0}):Play()
             TweenService:Create(itemBtn, TweenInfo.new(0.12), {BackgroundTransparency = 0.85}):Play()
-            TweenService:Create(selIndicator, TweenInfo.new(0.12), {BackgroundTransparency = 0}):Play()
         end)
         itemBtn.MouseLeave:Connect(function()
             TweenService:Create(itemBtn, TweenInfo.new(0.12), {TextTransparency = 0.2}):Play()
             TweenService:Create(itemBtn, TweenInfo.new(0.12), {BackgroundTransparency = 1}):Play()
-            TweenService:Create(selIndicator, TweenInfo.new(0.12), {BackgroundTransparency = 1}):Play()
         end)
         itemBtn.MouseButton1Click:Connect(function()
             selected = itemBtn.Text
             selectBtn.Text = "   " .. itemBtn.Text
             isOpen = false
 
-            local targetFrameSize = UDim2.new(1, 0, 0, collapsedHeight)
             TweenService:Create(listFrame, TweenInfo.new(0.18), {Size = UDim2.new(1, -10, 0, 0)}):Play()
-            TweenService:Create(frame, TweenInfo.new(0.18), {Size = targetFrameSize}):Play()
-            delay(0.18, function()
-                if listFrame and listFrame.Parent then listFrame.Visible = false end
-            end)
+            TweenService:Create(frame, TweenInfo.new(0.18), {Size = UDim2.new(1, 0, 0, collapsedHeight)}):Play()
+            task.wait(0.18)
+            listFrame.Visible = false
 
-            pcall(function()
-                listScroll.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y)
-            end)
             if type(onSelect) == "function" then
                 pcall(onSelect, itemBtn.Text)
             end
@@ -1055,68 +1022,31 @@ function LunoraHub:CreateDropdown(parent, titleText, items, defaultText, onSelec
         end
     end
 
-    RunService.Heartbeat:Wait()
-    pcall(function()
-        listScroll.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y)
-    end)
-
     selectBtn.MouseButton1Click:Connect(function()
         if isOpen then
             isOpen = false
-            local targetFrameSize = UDim2.new(1, 0, 0, collapsedHeight)
             TweenService:Create(listFrame, TweenInfo.new(0.18), {Size = UDim2.new(1, -10, 0, 0)}):Play()
-            TweenService:Create(frame, TweenInfo.new(0.18), {Size = targetFrameSize}):Play()
-            delay(0.18, function()
-                if listFrame and listFrame.Parent then listFrame.Visible = false end
-            end)
+            TweenService:Create(frame, TweenInfo.new(0.18), {Size = UDim2.new(1, 0, 0, collapsedHeight)}):Play()
+            task.wait(0.18)
+            listFrame.Visible = false
         else
             isOpen = true
             listFrame.Visible = true
 
-            RunService.Heartbeat:Wait()
+            task.wait(0.05)
             local contentH = listLayout.AbsoluteContentSize.Y
             local targetListH = math.clamp(contentH + 10, 30, 200)
             local targetFrameH = collapsedHeight + targetListH
-            listScroll.Size = UDim2.new(1, 0, 0, targetListH)
 
             TweenService:Create(frame, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, targetFrameH)}):Play()
             TweenService:Create(listFrame, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, -10, 0, targetListH)}):Play()
-
-            delay(0.06, function()
-                pcall(function()
-                    listScroll.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y)
-                end)
-            end)
         end
     end)
 
-    return {
-        Root = frame,
-        Add = function(_, newItem)
-            createItemButton(newItem)
-            RunService.Heartbeat:Wait()
-            pcall(function()
-                listScroll.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y)
-            end)
-        end,
-        Clear = function(_)
-            for _, c in ipairs(listScroll:GetChildren()) do
-                if c:IsA("TextButton") and c.Name == "Item" then
-                    c:Destroy()
-                end
-            end
-            selectBtn.Text = "   Select Items"
-            isOpen = false
-            listFrame.Visible = false
-            pcall(function()
-                listScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-            end)
-            TweenService:Create(frame, TweenInfo.new(0.15), {Size = UDim2.new(1, 0, 0, collapsedHeight)}):Play()
-        end,
-    }
+    return frame
 end
 
--- Textbox Creation Function (Bangers Font)
+-- Create Textbox
 function LunoraHub:CreateTextbox(parent, labelText, onConfirm)
     local frame = Instance.new("Frame")
     frame.Parent = parent
@@ -1129,7 +1059,6 @@ function LunoraHub:CreateTextbox(parent, labelText, onConfirm)
     corner.CornerRadius = UDim.new(0, 8)
 
     local label = Instance.new("TextLabel")
-    label.Name = "TextboxLabel"
     label.Parent = frame
     label.BackgroundTransparency = 1
     label.Position = UDim2.new(0, 15, 0.5, 0)
@@ -1142,7 +1071,6 @@ function LunoraHub:CreateTextbox(parent, labelText, onConfirm)
     label.TextXAlignment = Enum.TextXAlignment.Left
 
     local realBox = Instance.new("TextBox")
-    realBox.Name = "RealTextbox"
     realBox.Parent = frame
     realBox.BackgroundColor3 = LunoraHub.Config.DarkColor
     realBox.BackgroundTransparency = 0.1
@@ -1165,44 +1093,7 @@ function LunoraHub:CreateTextbox(parent, labelText, onConfirm)
     end)
 end
 
--- Separator Creation Function (Bangers Font)
-function LunoraHub:CreateSeparator(parent, text)
-    local sp = Instance.new("Frame")
-    sp.Name = "Seperator"
-    sp.Parent = parent
-    sp.BackgroundTransparency = 1
-    sp.Size = UDim2.new(1, 0, 0, 36)
-
-    local title = Instance.new("TextLabel")
-    title.Name = "Sep2"
-    title.Parent = sp
-    title.BackgroundTransparency = 1
-    title.AnchorPoint = Vector2.new(0.5, 1)
-    title.Position = UDim2.new(0.5, 0, 0, 30)
-    title.Size = UDim2.new(1, 0, 0, 36)
-    title.Font = Enum.Font.Bangers
-    title.Text = text
-    title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    title.TextSize = 14
-
-    local bar = Instance.new("Frame")
-    bar.Name = "Sep3"
-    bar.Parent = sp
-    bar.BackgroundColor3 = LunoraHub.Config.PrimaryColor
-    bar.BackgroundTransparency = 0
-    bar.BorderSizePixel = 0
-    bar.AnchorPoint = Vector2.new(0.5, 0.5)
-    bar.Position = UDim2.new(0.5, 0, 0, 25)
-    bar.Size = UDim2.new(0, 39, 0, 3)
-    local bcorner = Instance.new("UICorner")
-    bcorner.Parent = bar
-    bcorner.CornerRadius = UDim.new(0, math.huge)
-
-    local textSize = TextService:GetTextSize(title.Text, title.TextSize, title.Font, Vector2.new(1e6, 1e6))
-    bar.Size = UDim2.new(0, textSize.X * 0.7, 0, 3)
-end
-
--- StatusBox Creation Function (Bangers Font)
+-- Create StatusBox
 function LunoraHub:CreateStatusBox(parent, titleText, initialText, textColor)
     initialText = tostring(initialText or "")
     local container = Instance.new("Frame")
@@ -1224,4 +1115,55 @@ function LunoraHub:CreateStatusBox(parent, titleText, initialText, textColor)
     title.Text = titleText or "Status"
     title.TextColor3 = Color3.fromRGB(245, 245, 245)
     title.TextSize = 12
-    title.TextXAlignment = Enum.Text
+    title.TextXAlignment = Enum.TextXAlignment.Left
+
+    local content = Instance.new("TextLabel")
+    content.Parent = container
+    content.Name = "StatusContent"
+    content.BackgroundTransparency = 1
+    content.Position = UDim2.new(0, 10, 0, 28)
+    content.Size = UDim2.new(1, -20, 1, -36)
+    content.Font = Enum.Font.Code
+    content.TextWrapped = true
+    content.TextXAlignment = Enum.TextXAlignment.Left
+    content.TextYAlignment = Enum.TextYAlignment.Top
+    content.TextColor3 = textColor or Color3.fromRGB(230, 230, 230)
+    content.TextSize = 8
+    content.Text = initialText
+
+    local function refreshSize()
+        local txt = tostring(content.Text or "")
+        local size = TextService:GetTextSize(txt, content.TextSize, content.Font, Vector2.new(content.AbsoluteSize.X - 20, 1e6))
+        local newHeight = size.Y + 36
+        container.Size = UDim2.new(1, 0, 0, math.max(50, newHeight))
+    end
+
+    refreshSize()
+
+    local api = {}
+    function api.Set(_, newText)
+        content.Text = tostring(newText or "")
+        refreshSize()
+    end
+    function api.Append(_, moreText)
+        content.Text = content.Text .. tostring(moreText or "")
+        refreshSize()
+    end
+    function api.Clear(_)
+        content.Text = ""
+        refreshSize()
+    end
+    function api.GetText(_)
+        return content.Text
+    end
+    function api.SetColor(_, clr)
+        if typeof(clr) == "Color3" then
+            content.TextColor3 = clr
+        end
+    end
+
+    return api
+end
+
+print("✨ Lunora Hub Library Loaded Successfully!")
+return LunoraHub
