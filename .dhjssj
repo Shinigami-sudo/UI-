@@ -1,7 +1,8 @@
--- Lunora Hub UI Library - Complete Version
+-- Lunora Hub UI Library - Complete Version with Close/Open Button
 local LunoraHub = {}
 LunoraHub.Config = {
     WindowName = "Lunora Hub",
+    WindowSubtitle = "UI Library",
     WindowWidth = 450,
     WindowHeight = 320,
     TabWidth = 150,
@@ -12,7 +13,6 @@ LunoraHub.Config = {
     CornerRadius = 16,
     StrokeThickness = 1.5,
     Transparency = 0.2,
-    Visible = true,
 }
 
 local Players = game:GetService("Players")
@@ -31,12 +31,96 @@ local Camera = Workspace.CurrentCamera
 _G.Primary = LunoraHub.Config.PrimaryColor
 _G.Dark = LunoraHub.Config.DarkColor
 
+-- Clean up any existing GUIs
+local function CleanupExistingGUI()
+    local GUI = game:GetService("CoreGui"):FindFirstChild("OpenClose")
+    if GUI then GUI:Destroy() end
+    local GUI1 = game:GetService("CoreGui"):FindFirstChild("LunoraHubScreen")
+    if GUI1 then GUI1:Destroy() end
+end
+CleanupExistingGUI()
+
 -- Main GUI Setup
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "LunoraHub"
+ScreenGui.Name = "LunoraHubScreen"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.Parent = PlayerGui
+
+-- Open/Close Button (Style from lunora_hub_openclose.lua)
+local OpenCloseGui = Instance.new("ScreenGui")
+OpenCloseGui.Name = "OpenClose"
+OpenCloseGui.ResetOnSpawn = false
+OpenCloseGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+OpenCloseGui.Parent = PlayerGui
+
+local CloseOpenButton = Instance.new("ImageButton")
+CloseOpenButton.Parent = OpenCloseGui
+CloseOpenButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+CloseOpenButton.BorderColor3 = Color3.fromRGB(255, 0, 0)
+CloseOpenButton.Position = UDim2.new(0.1021, 0, 0.0743, 0)
+CloseOpenButton.Size = UDim2.new(0, 48, 0, 48)
+CloseOpenButton.Image = "rbxassetid://110198609281800"
+CloseOpenButton.Visible = true
+CloseOpenButton.ZIndex = 100
+
+local UICornerButton = Instance.new("UICorner")
+UICornerButton.Name = "MainCorner"
+UICornerButton.CornerRadius = UDim.new(1, 0)
+UICornerButton.Parent = CloseOpenButton
+
+local UIStrokeButton = Instance.new("UIStroke")
+UIStrokeButton.Color = Color3.fromRGB(60, 150, 255)
+UIStrokeButton.Thickness = 2
+UIStrokeButton.Transparency = 0.3
+UIStrokeButton.Parent = CloseOpenButton
+
+-- Pulsing effect for Close/Open button
+spawn(function()
+    while wait(0.03) do
+        if CloseOpenButton and CloseOpenButton.Parent then
+            local pulse = math.abs(math.sin(tick() * 2))
+            UIStrokeButton.Transparency = 0.2 + (pulse * 0.2)
+            UIStrokeButton.Thickness = 1.5 + (pulse * 1)
+        end
+    end
+end)
+
+-- Draggable Close/Open Button
+local function MakeDraggable(frame)
+    local dragging = false
+    local dragStart = nil
+    local startPos = nil
+    
+    local function update(input)
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+    
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            if dragging then
+                update(input)
+            end
+        end
+    end)
+end
+
+MakeDraggable(CloseOpenButton)
 
 -- Main Window Frame
 local MainFrame = Instance.new("Frame")
@@ -108,7 +192,7 @@ SidebarStroke.Thickness = 1
 SidebarStroke.Transparency = 0.5
 SidebarStroke.Parent = Sidebar
 
--- Title
+-- Title (Bangers Font)
 local Title = Instance.new("TextLabel")
 Title.Name = "Title"
 Title.Size = UDim2.new(1, -15, 0, 34)
@@ -122,15 +206,16 @@ Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.TextStrokeTransparency = 1
 Title.Parent = Sidebar
 
+-- Subtitle (Bangers Font - Customizable)
 local Subtitle = Instance.new("TextLabel")
 Subtitle.Name = "Subtitle"
 Subtitle.Size = UDim2.new(1, -15, 0, 16)
 Subtitle.Position = UDim2.new(0, 10, 0, 46)
 Subtitle.BackgroundTransparency = 1
-Subtitle.Text = "UI Library"
+Subtitle.Text = LunoraHub.Config.WindowSubtitle
 Subtitle.TextColor3 = Color3.fromRGB(170, 190, 210)
 Subtitle.TextSize = 12
-Subtitle.Font = Enum.Font.SourceSans
+Subtitle.Font = Enum.Font.Bangers
 Subtitle.TextXAlignment = Enum.TextXAlignment.Left
 Subtitle.Parent = Sidebar
 
@@ -152,7 +237,7 @@ TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
 TabLayout.Padding = UDim.new(0, 6)
 TabLayout.Parent = TabContainer
 
--- Discord Label
+-- Discord Label (Bangers Font)
 local DiscordLabel = Instance.new("TextLabel")
 DiscordLabel.Name = "DiscordLabel"
 DiscordLabel.Size = UDim2.new(1, -20, 0, 40)
@@ -161,7 +246,7 @@ DiscordLabel.BackgroundTransparency = 1
 DiscordLabel.Text = "Lunora Hub"
 DiscordLabel.TextColor3 = Color3.fromRGB(200, 210, 220)
 DiscordLabel.TextSize = 12
-DiscordLabel.Font = Enum.Font.SourceSansBold
+DiscordLabel.Font = Enum.Font.Bangers
 DiscordLabel.TextXAlignment = Enum.TextXAlignment.Center
 DiscordLabel.TextYAlignment = Enum.TextYAlignment.Center
 DiscordLabel.Parent = Sidebar
@@ -174,83 +259,24 @@ ContentArea.Position = UDim2.new(0, LunoraHub.Config.TabWidth + 8, 0, 8)
 ContentArea.BackgroundTransparency = 1
 ContentArea.Parent = MainFrame
 
--- Close Button
-local CloseButton = Instance.new("TextButton")
-CloseButton.Name = "CloseButton"
-CloseButton.Size = UDim2.new(0, 25, 0, 25)
-CloseButton.Position = UDim2.new(1, -35, 0, 8)
-CloseButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-CloseButton.Text = "X"
-CloseButton.TextColor3 = LunoraHub.Config.PrimaryColor
-CloseButton.TextSize = 16
-CloseButton.Font = Enum.Font.GothamBold
-CloseButton.Parent = MainFrame
-
-local CloseCorner = Instance.new("UICorner")
-CloseCorner.CornerRadius = UDim.new(0, 6)
-CloseCorner.Parent = CloseButton
-
-local CloseStroke = Instance.new("UIStroke")
-CloseStroke.Color = LunoraHub.Config.PrimaryColor
-CloseStroke.Thickness = 1
-CloseStroke.Transparency = 0.5
-CloseStroke.Parent = CloseButton
-
--- Minimize Button
-local MinimizeButton = Instance.new("TextButton")
-MinimizeButton.Name = "MinimizeButton"
-MinimizeButton.Size = UDim2.new(0, 25, 0, 25)
-MinimizeButton.Position = UDim2.new(1, -65, 0, 8)
-MinimizeButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-MinimizeButton.Text = "-"
-MinimizeButton.TextColor3 = LunoraHub.Config.PrimaryColor
-MinimizeButton.TextSize = 16
-MinimizeButton.Font = Enum.Font.GothamBold
-MinimizeButton.Parent = MainFrame
-
-local MinimizeCorner = Instance.new("UICorner")
-MinimizeCorner.CornerRadius = UDim.new(0, 6)
-MinimizeCorner.Parent = MinimizeButton
-
-local MinimizeStroke = Instance.new("UIStroke")
-MinimizeStroke.Color = LunoraHub.Config.PrimaryColor
-MinimizeStroke.Thickness = 1
-MinimizeStroke.Transparency = 0.5
-MinimizeStroke.Parent = MinimizeButton
-
--- Minimize/Show Window Functionality
-local minimized = false
-
-MinimizeButton.MouseButton1Click:Connect(function()
-    minimized = not minimized
-    if minimized then
-        TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
-            Size = UDim2.new(0, 150, 0, 40)
-        }):Play()
-        MinimizeButton.Text = "+"
-    else
-        TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, LunoraHub.Config.WindowWidth, 0, LunoraHub.Config.WindowHeight)
-        }):Play()
-        MinimizeButton.Text = "-"
-    end
-end)
-
--- Draggable Function
-local function MakeDraggable(frame)
-    local dragging
-    local dragInput
-    local dragStart
-    local startPos
+-- Draggable Main Window
+local function MakeDraggableWindow(frame)
+    local dragging = false
+    local dragInput = nil
+    local dragStart = nil
+    local startPos = nil
+    
     local function update(input)
         local delta = input.Position - dragStart
         frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
+    
     frame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             dragStart = input.Position
             startPos = frame.Position
+            
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
@@ -258,11 +284,13 @@ local function MakeDraggable(frame)
             end)
         end
     end)
+    
     frame.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             dragInput = input
         end
     end)
+    
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             update(input)
@@ -270,31 +298,32 @@ local function MakeDraggable(frame)
     end)
 end
 
-MakeDraggable(MainFrame)
+MakeDraggableWindow(MainFrame)
 
--- Close Button Functionality
-CloseButton.MouseButton1Click:Connect(function()
-    TweenService:Create(CloseButton, TweenInfo.new(0.1), {
-        BackgroundColor3 = Color3.fromRGB(10, 10, 10),
-        Rotation = 90
-    }):Play()
-    local shrinkTween = TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
-        Size = UDim2.new(0, 0, 0, 0),
-        Position = UDim2.new(0.5, 0, 0.5, 0),
-        Rotation = 180
-    })
-    local fadeTween = TweenService:Create(MainFrame, TweenInfo.new(0.3), {
-        BackgroundTransparency = 1
-    })
-    shrinkTween:Play()
-    fadeTween:Play()
-    shrinkTween.Completed:Connect(function()
-        wait(0.1)
-        ScreenGui:Destroy()
-    end)
+-- Close/Open Button Functionality
+local mainWindowVisible = true
+
+CloseOpenButton.MouseButton1Click:Connect(function()
+    mainWindowVisible = not mainWindowVisible
+    
+    if mainWindowVisible then
+        -- Show window
+        ScreenGui.Enabled = true
+        TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, LunoraHub.Config.WindowWidth, 0, LunoraHub.Config.WindowHeight)
+        }):Play()
+    else
+        -- Hide window
+        TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+            Size = UDim2.new(0, 0, 0, 0)
+        }):Play()
+        delay(0.3, function()
+            ScreenGui.Enabled = false
+        end)
+    end
 end)
 
--- Tab Creation Function with Icons
+-- Tab Creation Function with Icons (Bangers Font)
 function LunoraHub:CreateTab(tabName, layoutOrder, iconId)
     iconId = iconId or "rbxassetid://0"
     
@@ -326,7 +355,7 @@ function LunoraHub:CreateTab(tabName, layoutOrder, iconId)
     IconLabel.Image = iconId
     IconLabel.ImageColor3 = Color3.fromRGB(170, 190, 210)
     
-    -- Tab Name
+    -- Tab Name (Bangers Font)
     local TabLabel = Instance.new("TextLabel")
     TabLabel.Name = "Label"
     TabLabel.Parent = TabButton
@@ -336,7 +365,7 @@ function LunoraHub:CreateTab(tabName, layoutOrder, iconId)
     TabLabel.Text = tabName
     TabLabel.TextColor3 = Color3.fromRGB(170, 190, 210)
     TabLabel.TextSize = 12
-    TabLabel.Font = Enum.Font.SourceSansSemibold
+    TabLabel.Font = Enum.Font.Bangers
     TabLabel.TextXAlignment = Enum.TextXAlignment.Left
     TabLabel.TextYAlignment = Enum.TextYAlignment.Center
     
@@ -424,7 +453,7 @@ function LunoraHub:CreateTab(tabName, layoutOrder, iconId)
     return TabContent
 end
 
--- Button Creation Function (Exact Style from Example)
+-- Button Creation Function (Exact Style from Example - Bangers Font)
 function LunoraHub:CreateButton(parent, buttonName, callback)
     local frame = Instance.new("Frame")
     frame.Name = "Button"
@@ -443,7 +472,7 @@ function LunoraHub:CreateButton(parent, buttonName, callback)
     label.AnchorPoint = Vector2.new(0, 0.5)
     label.Position = UDim2.new(0, 15, 0.5, 0)
     label.Size = UDim2.new(1, -40, 1, 0)
-    label.Font = Enum.Font.GothamSemibold
+    label.Font = Enum.Font.Bangers
     label.Text = buttonName
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.TextColor3 = Color3.fromRGB(245, 245, 245)
@@ -479,7 +508,7 @@ function LunoraHub:CreateButton(parent, buttonName, callback)
     end)
 end
 
--- Toggle Creation Function
+-- Toggle Creation Function (Bangers Font)
 function LunoraHub:CreateToggle(parent, buttonName, callback)
     local ToggleFrame = Instance.new("Frame")
     ToggleFrame.Name = buttonName
@@ -504,7 +533,7 @@ function LunoraHub:CreateToggle(parent, buttonName, callback)
     ToggleLabel.Text = buttonName
     ToggleLabel.TextColor3 = Color3.fromRGB(170, 190, 210)
     ToggleLabel.TextSize = 12
-    ToggleLabel.Font = Enum.Font.SourceSans
+    ToggleLabel.Font = Enum.Font.Bangers
     ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
     ToggleLabel.Parent = ToggleFrame
     
@@ -583,7 +612,7 @@ function LunoraHub:CreateToggle(parent, buttonName, callback)
     end)
 end
 
--- Section Creation Function
+-- Section Creation Function (Bangers Font)
 function LunoraHub:CreateSection(parent, sectionName)
     local SectionLabel = Instance.new("TextLabel")
     SectionLabel.Name = sectionName
@@ -592,13 +621,13 @@ function LunoraHub:CreateSection(parent, sectionName)
     SectionLabel.Text = sectionName
     SectionLabel.TextColor3 = Color3.fromRGB(200, 210, 220)
     SectionLabel.TextSize = 14
-    SectionLabel.Font = Enum.Font.SourceSansBold
+    SectionLabel.Font = Enum.Font.Bangers
     SectionLabel.TextXAlignment = Enum.TextXAlignment.Left
     SectionLabel.TextStrokeTransparency = 1
     SectionLabel.Parent = parent
 end
 
--- Dropdown Creation Function
+-- Dropdown Creation Function (Bangers Font)
 function LunoraHub:CreateDropdown(parent, titleText, items, defaultText, onSelect)
     items = items or {}
     local selected = defaultText or "Select Items"
@@ -620,7 +649,7 @@ function LunoraHub:CreateDropdown(parent, titleText, items, defaultText, onSelec
     label.Name = "DropTitle"
     label.BackgroundTransparency = 1
     label.Size = UDim2.new(1, 0, 0, 30)
-    label.Font = Enum.Font.GothamSemibold
+    label.Font = Enum.Font.Bangers
     label.Text = titleText or ""
     label.TextColor3 = Color3.fromRGB(245, 245, 245)
     label.TextSize = 13
@@ -635,7 +664,7 @@ function LunoraHub:CreateDropdown(parent, titleText, items, defaultText, onSelec
     selectBtn.Position = UDim2.new(1, -5, 0, 5)
     selectBtn.Size = UDim2.new(0, 100, 0, 30)
     selectBtn.AnchorPoint = Vector2.new(1, 0)
-    selectBtn.Font = Enum.Font.GothamMedium
+    selectBtn.Font = Enum.Font.Bangers
     selectBtn.TextSize = 9
     selectBtn.ZIndex = 2
     selectBtn.ClipsDescendants = true
@@ -686,7 +715,7 @@ function LunoraHub:CreateDropdown(parent, titleText, items, defaultText, onSelec
         itemBtn.Parent = listScroll
         itemBtn.BackgroundTransparency = 1
         itemBtn.Size = UDim2.new(1, 0, 0, 30)
-        itemBtn.Font = Enum.Font.GothamSemibold
+        itemBtn.Font = Enum.Font.Bangers
         itemBtn.Text = tostring(itemValue)
         itemBtn.TextColor3 = Color3.fromRGB(245, 245, 245)
         itemBtn.TextSize = 11
@@ -814,7 +843,7 @@ function LunoraHub:CreateDropdown(parent, titleText, items, defaultText, onSelec
     }
 end
 
--- Textbox Creation Function
+-- Textbox Creation Function (Bangers Font)
 function LunoraHub:CreateTextbox(parent, labelText, onConfirm)
     local frame = Instance.new("Frame")
     frame.Parent = parent
@@ -833,7 +862,7 @@ function LunoraHub:CreateTextbox(parent, labelText, onConfirm)
     label.Position = UDim2.new(0, 15, 0.5, 0)
     label.Text = labelText
     label.Size = UDim2.new(1, 0, 0, 35)
-    label.Font = Enum.Font.GothamSemibold
+    label.Font = Enum.Font.Bangers
     label.AnchorPoint = Vector2.new(0, 0.5)
     label.TextColor3 = Color3.fromRGB(245, 245, 245)
     label.TextSize = 13
@@ -847,7 +876,7 @@ function LunoraHub:CreateTextbox(parent, labelText, onConfirm)
     realBox.Position = UDim2.new(1, -5, 0.5, 0)
     realBox.AnchorPoint = Vector2.new(1, 0.5)
     realBox.Size = UDim2.new(0, 80, 0, 25)
-    realBox.Font = Enum.Font.GothamSemibold
+    realBox.Font = Enum.Font.Bangers
     realBox.Text = ""
     realBox.TextColor3 = Color3.fromRGB(225, 225, 225)
     realBox.TextSize = 11
@@ -863,7 +892,7 @@ function LunoraHub:CreateTextbox(parent, labelText, onConfirm)
     end)
 end
 
--- Separator Creation Function
+-- Separator Creation Function (Bangers Font)
 function LunoraHub:CreateSeparator(parent, text)
     local sp = Instance.new("Frame")
     sp.Name = "Seperator"
@@ -878,7 +907,7 @@ function LunoraHub:CreateSeparator(parent, text)
     title.AnchorPoint = Vector2.new(0.5, 1)
     title.Position = UDim2.new(0.5, 0, 0, 30)
     title.Size = UDim2.new(1, 0, 0, 36)
-    title.Font = Enum.Font.GothamBold
+    title.Font = Enum.Font.Bangers
     title.Text = text
     title.TextColor3 = Color3.fromRGB(255, 255, 255)
     title.TextSize = 14
@@ -900,7 +929,7 @@ function LunoraHub:CreateSeparator(parent, text)
     bar.Size = UDim2.new(0, textSize.X * 0.7, 0, 3)
 end
 
--- StatusBox Creation Function
+-- StatusBox Creation Function (Bangers Font)
 function LunoraHub:CreateStatusBox(parent, titleText, initialText, textColor)
     initialText = tostring(initialText or "")
     local container = Instance.new("Frame")
@@ -918,7 +947,7 @@ function LunoraHub:CreateStatusBox(parent, titleText, initialText, textColor)
     title.BackgroundTransparency = 1
     title.Position = UDim2.new(0, 10, 0, 6)
     title.Size = UDim2.new(1, -20, 0, 18)
-    title.Font = Enum.Font.GothamSemibold
+    title.Font = Enum.Font.Bangers
     title.Text = titleText or "Status"
     title.TextColor3 = Color3.fromRGB(245, 245, 245)
     title.TextSize = 12
@@ -975,15 +1004,5 @@ function LunoraHub:CreateStatusBox(parent, titleText, initialText, textColor)
     return api
 end
 
--- Show/Hide Window Function
-function LunoraHub:SetWindowVisible(visible)
-    LunoraHub.Config.Visible = visible
-    MainFrame.Visible = visible
-end
-
-function LunoraHub:GetWindowVisible()
-    return LunoraHub.Config.Visible
-end
-
-print("Lunora Hub UI Library Loaded Successfully")
+print("✨ Lunora Hub UI Library Loaded Successfully ✨")
 return LunoraHub
