@@ -1,4 +1,4 @@
--- Lunora Hub - UI Library with Customizable Settings
+-- Lunora Hub UI Library - Complete Version
 local LunoraHub = {}
 LunoraHub.Config = {
     WindowName = "Lunora Hub",
@@ -7,10 +7,12 @@ LunoraHub.Config = {
     TabWidth = 150,
     PrimaryColor = Color3.fromRGB(60, 150, 255),
     SecondaryColor = Color3.fromRGB(0, 0, 0),
+    DarkColor = Color3.fromRGB(20, 20, 20),
     TextColor = Color3.fromRGB(255, 255, 255),
     CornerRadius = 16,
     StrokeThickness = 1.5,
     Transparency = 0.2,
+    Visible = true,
 }
 
 local Players = game:GetService("Players")
@@ -19,10 +21,15 @@ local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
+local TextService = game:GetService("TextService")
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 local Camera = Workspace.CurrentCamera
+
+-- Set global colors for component use
+_G.Primary = LunoraHub.Config.PrimaryColor
+_G.Dark = LunoraHub.Config.DarkColor
 
 -- Main GUI Setup
 local ScreenGui = Instance.new("ScreenGui")
@@ -189,6 +196,46 @@ CloseStroke.Thickness = 1
 CloseStroke.Transparency = 0.5
 CloseStroke.Parent = CloseButton
 
+-- Minimize Button
+local MinimizeButton = Instance.new("TextButton")
+MinimizeButton.Name = "MinimizeButton"
+MinimizeButton.Size = UDim2.new(0, 25, 0, 25)
+MinimizeButton.Position = UDim2.new(1, -65, 0, 8)
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MinimizeButton.Text = "-"
+MinimizeButton.TextColor3 = LunoraHub.Config.PrimaryColor
+MinimizeButton.TextSize = 16
+MinimizeButton.Font = Enum.Font.GothamBold
+MinimizeButton.Parent = MainFrame
+
+local MinimizeCorner = Instance.new("UICorner")
+MinimizeCorner.CornerRadius = UDim.new(0, 6)
+MinimizeCorner.Parent = MinimizeButton
+
+local MinimizeStroke = Instance.new("UIStroke")
+MinimizeStroke.Color = LunoraHub.Config.PrimaryColor
+MinimizeStroke.Thickness = 1
+MinimizeStroke.Transparency = 0.5
+MinimizeStroke.Parent = MinimizeButton
+
+-- Minimize/Show Window Functionality
+local minimized = false
+
+MinimizeButton.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    if minimized then
+        TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+            Size = UDim2.new(0, 150, 0, 40)
+        }):Play()
+        MinimizeButton.Text = "+"
+    else
+        TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, LunoraHub.Config.WindowWidth, 0, LunoraHub.Config.WindowHeight)
+        }):Play()
+        MinimizeButton.Text = "-"
+    end
+end)
+
 -- Draggable Function
 local function MakeDraggable(frame)
     local dragging
@@ -247,23 +294,17 @@ CloseButton.MouseButton1Click:Connect(function()
     end)
 end)
 
--- Tab Creation Function
-function LunoraHub:CreateTab(tabName, layoutOrder)
+-- Tab Creation Function with Icons
+function LunoraHub:CreateTab(tabName, layoutOrder, iconId)
+    iconId = iconId or "rbxassetid://0"
+    
     local TabButton = Instance.new("TextButton")
     TabButton.Name = tabName
-    TabButton.Size = UDim2.new(1, 0, 0, 35)
+    TabButton.Size = UDim2.new(1, 0, 0, 40)
     TabButton.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-    TabButton.Text = tabName
-    TabButton.TextColor3 = Color3.fromRGB(170, 190, 210)
-    TabButton.TextSize = 13
-    TabButton.Font = Enum.Font.SourceSansSemibold
-    TabButton.TextXAlignment = Enum.TextXAlignment.Left
+    TabButton.Text = ""
     TabButton.LayoutOrder = layoutOrder
     TabButton.Parent = TabContainer
-    
-    local TabPadding = Instance.new("UIPadding")
-    TabPadding.PaddingLeft = UDim.new(0, 12)
-    TabPadding.Parent = TabButton
     
     local TabCorner = Instance.new("UICorner")
     TabCorner.CornerRadius = UDim.new(0, 5)
@@ -274,6 +315,30 @@ function LunoraHub:CreateTab(tabName, layoutOrder)
     TabStroke.Thickness = 1
     TabStroke.Transparency = 0.6
     TabStroke.Parent = TabButton
+    
+    -- Icon
+    local IconLabel = Instance.new("ImageLabel")
+    IconLabel.Name = "Icon"
+    IconLabel.Parent = TabButton
+    IconLabel.BackgroundTransparency = 1
+    IconLabel.Position = UDim2.new(0, 8, 0.5, -8)
+    IconLabel.Size = UDim2.new(0, 16, 0, 16)
+    IconLabel.Image = iconId
+    IconLabel.ImageColor3 = Color3.fromRGB(170, 190, 210)
+    
+    -- Tab Name
+    local TabLabel = Instance.new("TextLabel")
+    TabLabel.Name = "Label"
+    TabLabel.Parent = TabButton
+    TabLabel.BackgroundTransparency = 1
+    TabLabel.Position = UDim2.new(0, 30, 0, 0)
+    TabLabel.Size = UDim2.new(1, -40, 1, 0)
+    TabLabel.Text = tabName
+    TabLabel.TextColor3 = Color3.fromRGB(170, 190, 210)
+    TabLabel.TextSize = 12
+    TabLabel.Font = Enum.Font.SourceSansSemibold
+    TabLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TabLabel.TextYAlignment = Enum.TextYAlignment.Center
     
     local TabContent = Instance.new("ScrollingFrame")
     TabContent.Name = tabName .. "Content"
@@ -310,9 +375,20 @@ function LunoraHub:CreateTab(tabName, layoutOrder)
         for _, btn in pairs(TabContainer:GetChildren()) do
             if btn:IsA("TextButton") then
                 TweenService:Create(btn, TweenInfo.new(0.2), {
-                    BackgroundColor3 = Color3.fromRGB(10, 10, 10),
-                    TextColor3 = Color3.fromRGB(170, 190, 210)
+                    BackgroundColor3 = Color3.fromRGB(10, 10, 10)
                 }):Play()
+                local label = btn:FindFirstChild("Label")
+                if label then
+                    TweenService:Create(label, TweenInfo.new(0.2), {
+                        TextColor3 = Color3.fromRGB(170, 190, 210)
+                    }):Play()
+                end
+                local icon = btn:FindFirstChild("Icon")
+                if icon then
+                    TweenService:Create(icon, TweenInfo.new(0.2), {
+                        ImageColor3 = Color3.fromRGB(170, 190, 210)
+                    }):Play()
+                end
                 local stroke = btn:FindFirstChild("UIStroke")
                 if stroke then
                     TweenService:Create(stroke, TweenInfo.new(0.2), {
@@ -324,8 +400,13 @@ function LunoraHub:CreateTab(tabName, layoutOrder)
         
         TabContent.Visible = true
         TweenService:Create(TabButton, TweenInfo.new(0.2), {
-            BackgroundColor3 = Color3.fromRGB(22, 30, 40),
+            BackgroundColor3 = Color3.fromRGB(22, 30, 40)
+        }):Play()
+        TweenService:Create(TabLabel, TweenInfo.new(0.2), {
             TextColor3 = Color3.fromRGB(220, 230, 255)
+        }):Play()
+        TweenService:Create(IconLabel, TweenInfo.new(0.2), {
+            ImageColor3 = Color3.fromRGB(220, 230, 255)
         }):Play()
         TweenService:Create(TabStroke, TweenInfo.new(0.2), {
             Transparency = 0.3
@@ -335,11 +416,67 @@ function LunoraHub:CreateTab(tabName, layoutOrder)
     if layoutOrder == 1 then
         TabContent.Visible = true
         TabButton.BackgroundColor3 = Color3.fromRGB(22, 30, 40)
-        TabButton.TextColor3 = Color3.fromRGB(220, 230, 255)
+        TabLabel.TextColor3 = Color3.fromRGB(220, 230, 255)
+        IconLabel.ImageColor3 = Color3.fromRGB(220, 230, 255)
         TabStroke.Transparency = 0.3
     end
     
     return TabContent
+end
+
+-- Button Creation Function (Exact Style from Example)
+function LunoraHub:CreateButton(parent, buttonName, callback)
+    local frame = Instance.new("Frame")
+    frame.Name = "Button"
+    frame.Parent = parent
+    frame.BackgroundColor3 = LunoraHub.Config.PrimaryColor
+    frame.BackgroundTransparency = 0.75
+    frame.Size = UDim2.new(1, 0, 0, 36)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = frame
+
+    local label = Instance.new("TextLabel")
+    label.Name = "TextLabel"
+    label.Parent = frame
+    label.BackgroundTransparency = 1
+    label.AnchorPoint = Vector2.new(0, 0.5)
+    label.Position = UDim2.new(0, 15, 0.5, 0)
+    label.Size = UDim2.new(1, -40, 1, 0)
+    label.Font = Enum.Font.GothamSemibold
+    label.Text = buttonName
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextColor3 = Color3.fromRGB(245, 245, 245)
+    label.TextSize = 13
+
+    local btn = Instance.new("TextButton")
+    btn.Name = "TextButton"
+    btn.Parent = frame
+    btn.BackgroundColor3 = LunoraHub.Config.DarkColor
+    btn.BackgroundTransparency = 0
+    btn.AnchorPoint = Vector2.new(1, 0.5)
+    btn.Position = UDim2.new(1, -10, 0.5, 0)
+    btn.Size = UDim2.new(0, 22, 0, 22)
+    btn.AutoButtonColor = true
+
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 6)
+    btnCorner.Parent = btn
+
+    local img = Instance.new("ImageLabel")
+    img.Name = "ImageLabel"
+    img.Parent = btn
+    img.BackgroundTransparency = 1
+    img.AnchorPoint = Vector2.new(0.5, 0.5)
+    img.Position = UDim2.new(0.5, 0, 0.5, 0)
+    img.Size = UDim2.new(0, 15, 0, 15)
+    img.Image = "rbxassetid://10723375250"
+    img.ImageTransparency = 0.05
+    img.ImageColor3 = Color3.fromRGB(245, 245, 245)
+
+    btn.MouseButton1Click:Connect(function()
+        pcall(callback)
+    end)
 end
 
 -- Toggle Creation Function
@@ -446,63 +583,6 @@ function LunoraHub:CreateToggle(parent, buttonName, callback)
     end)
 end
 
--- Button Creation Function
-function LunoraHub:CreateButton(parent, buttonName, callback, isRed)
-    local ButtonFrame = Instance.new("Frame")
-    ButtonFrame.Name = buttonName
-    ButtonFrame.Size = UDim2.new(1, -15, 0, 38)
-    local baseColor = isRed and Color3.fromRGB(30, 60, 120) or Color3.fromRGB(10, 10, 10)
-    ButtonFrame.BackgroundColor3 = baseColor
-    ButtonFrame.Parent = parent
-    
-    local ButtonCorner = Instance.new("UICorner")
-    ButtonCorner.CornerRadius = UDim.new(0, 5)
-    ButtonCorner.Parent = ButtonFrame
-    
-    local ButtonStroke = Instance.new("UIStroke")
-    ButtonStroke.Color = LunoraHub.Config.PrimaryColor
-    ButtonStroke.Thickness = 1
-    ButtonStroke.Transparency = 0.5
-    ButtonStroke.Parent = ButtonFrame
-    
-    local Button = Instance.new("TextButton")
-    Button.Size = UDim2.new(1, 0, 1, 0)
-    Button.BackgroundTransparency = 1
-    Button.Text = buttonName
-    Button.TextColor3 = Color3.fromRGB(200, 210, 220)
-    Button.TextSize = 12
-    Button.Font = Enum.Font.SourceSansBold
-    Button.Parent = ButtonFrame
-    
-    Button.MouseButton1Click:Connect(function()
-        TweenService:Create(ButtonFrame, TweenInfo.new(0.1, Enum.EasingStyle.Back), {
-            BackgroundColor3 = Color3.fromRGB(30, 40, 70),
-            Size = UDim2.new(1, -20, 0, 36)
-        }):Play()
-        TweenService:Create(ButtonStroke, TweenInfo.new(0.1), {
-            Thickness = 2,
-            Color = Color3.fromRGB(80, 170, 255)
-        }):Play()
-        TweenService:Create(Button, TweenInfo.new(0.1), { Rotation = 5 }):Play()
-        
-        wait(0.1)
-        
-        TweenService:Create(ButtonFrame, TweenInfo.new(0.15, Enum.EasingStyle.Back), {
-            BackgroundColor3 = baseColor,
-            Size = UDim2.new(1, -15, 0, 38)
-        }):Play()
-        TweenService:Create(ButtonStroke, TweenInfo.new(0.15), {
-            Thickness = 1,
-            Color = LunoraHub.Config.PrimaryColor
-        }):Play()
-        TweenService:Create(Button, TweenInfo.new(0.15), { Rotation = 0 }):Play()
-        
-        if callback then
-            callback()
-        end
-    end)
-end
-
 -- Section Creation Function
 function LunoraHub:CreateSection(parent, sectionName)
     local SectionLabel = Instance.new("TextLabel")
@@ -516,6 +596,393 @@ function LunoraHub:CreateSection(parent, sectionName)
     SectionLabel.TextXAlignment = Enum.TextXAlignment.Left
     SectionLabel.TextStrokeTransparency = 1
     SectionLabel.Parent = parent
+end
+
+-- Dropdown Creation Function
+function LunoraHub:CreateDropdown(parent, titleText, items, defaultText, onSelect)
+    items = items or {}
+    local selected = defaultText or "Select Items"
+    local isOpen = false
+    local collapsedHeight = 40
+
+    local frame = Instance.new("Frame")
+    frame.Parent = parent
+    frame.Name = "Dropdown"
+    frame.BackgroundColor3 = LunoraHub.Config.PrimaryColor
+    frame.BackgroundTransparency = 0.8
+    frame.Size = UDim2.new(1, 0, 0, collapsedHeight)
+    local frameCorner = Instance.new("UICorner")
+    frameCorner.Parent = frame
+    frameCorner.CornerRadius = UDim.new(0, 8)
+
+    local label = Instance.new("TextLabel")
+    label.Parent = frame
+    label.Name = "DropTitle"
+    label.BackgroundTransparency = 1
+    label.Size = UDim2.new(1, 0, 0, 30)
+    label.Font = Enum.Font.GothamSemibold
+    label.Text = titleText or ""
+    label.TextColor3 = Color3.fromRGB(245, 245, 245)
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Position = UDim2.new(0, 15, 0, 5)
+
+    local selectBtn = Instance.new("TextButton")
+    selectBtn.Parent = frame
+    selectBtn.Name = "SelectItems"
+    selectBtn.BackgroundColor3 = LunoraHub.Config.DarkColor
+    selectBtn.BackgroundTransparency = 0.1
+    selectBtn.Position = UDim2.new(1, -5, 0, 5)
+    selectBtn.Size = UDim2.new(0, 100, 0, 30)
+    selectBtn.AnchorPoint = Vector2.new(1, 0)
+    selectBtn.Font = Enum.Font.GothamMedium
+    selectBtn.TextSize = 9
+    selectBtn.ZIndex = 2
+    selectBtn.ClipsDescendants = true
+    selectBtn.TextXAlignment = Enum.TextXAlignment.Left
+    selectBtn.Text = "   " .. tostring(selected)
+    local selectCorner = Instance.new("UICorner")
+    selectCorner.Parent = selectBtn
+    selectCorner.CornerRadius = UDim.new(0, 6)
+
+    local listFrame = Instance.new("Frame")
+    listFrame.Name = "DropdownFrameScroll"
+    listFrame.Parent = frame
+    listFrame.BackgroundColor3 = LunoraHub.Config.DarkColor
+    listFrame.BackgroundTransparency = 0
+    listFrame.Size = UDim2.new(1, -10, 0, 0)
+    listFrame.Position = UDim2.new(0, 5, 0, collapsedHeight)
+    listFrame.AnchorPoint = Vector2.new(0, 0)
+    listFrame.ClipsDescendants = false
+    listFrame.Visible = false
+    local lfCorner = Instance.new("UICorner")
+    lfCorner.Parent = listFrame
+    lfCorner.CornerRadius = UDim.new(0, 6)
+
+    local listScroll = Instance.new("ScrollingFrame")
+    listScroll.Name = "DropScroll"
+    listScroll.Parent = listFrame
+    listScroll.Active = true
+    listScroll.BackgroundTransparency = 1
+    listScroll.BorderSizePixel = 0
+    listScroll.Position = UDim2.new(0, 0, 0, 5)
+    listScroll.Size = UDim2.new(1, 0, 0, 80)
+    listScroll.ClipsDescendants = true
+    listScroll.ScrollBarThickness = 3
+    listScroll.ZIndex = 3
+
+    local padding = Instance.new("UIPadding")
+    padding.Parent = listScroll
+    padding.PaddingLeft = UDim.new(0, 10)
+    padding.PaddingRight = UDim.new(0, 10)
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.Parent = listScroll
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Padding = UDim.new(0, 1)
+
+    local function createItemButton(itemValue)
+        local itemBtn = Instance.new("TextButton")
+        itemBtn.Name = "Item"
+        itemBtn.Parent = listScroll
+        itemBtn.BackgroundTransparency = 1
+        itemBtn.Size = UDim2.new(1, 0, 0, 30)
+        itemBtn.Font = Enum.Font.GothamSemibold
+        itemBtn.Text = tostring(itemValue)
+        itemBtn.TextColor3 = Color3.fromRGB(245, 245, 245)
+        itemBtn.TextSize = 11
+        itemBtn.TextTransparency = 0.5
+        itemBtn.TextXAlignment = Enum.TextXAlignment.Left
+        itemBtn.ZIndex = 4
+
+        local itemPad = Instance.new("UIPadding")
+        itemPad.Parent = itemBtn
+        itemPad.PaddingLeft = UDim.new(0, 8)
+        local itemCorner = Instance.new("UICorner")
+        itemCorner.Parent = itemBtn
+        itemCorner.CornerRadius = UDim.new(0, 6)
+
+        local selIndicator = Instance.new("Frame")
+        selIndicator.Name = "SelectedItems"
+        selIndicator.Parent = itemBtn
+        selIndicator.BackgroundColor3 = LunoraHub.Config.PrimaryColor
+        selIndicator.BackgroundTransparency = 1
+        selIndicator.Size = UDim2.new(0, 3, 0.4, 0)
+        selIndicator.Position = UDim2.new(0, -8, 0.5, 0)
+        selIndicator.AnchorPoint = Vector2.new(0, 0.5)
+        selIndicator.ZIndex = 4
+        local selCorner = Instance.new("UICorner")
+        selCorner.Parent = selIndicator
+        selCorner.CornerRadius = UDim.new(0, 6)
+
+        itemBtn.MouseEnter:Connect(function()
+            TweenService:Create(itemBtn, TweenInfo.new(0.12), {TextTransparency = 0}):Play()
+            TweenService:Create(itemBtn, TweenInfo.new(0.12), {BackgroundTransparency = 0.85}):Play()
+            TweenService:Create(selIndicator, TweenInfo.new(0.12), {BackgroundTransparency = 0}):Play()
+        end)
+        itemBtn.MouseLeave:Connect(function()
+            TweenService:Create(itemBtn, TweenInfo.new(0.12), {TextTransparency = 0.2}):Play()
+            TweenService:Create(itemBtn, TweenInfo.new(0.12), {BackgroundTransparency = 1}):Play()
+            TweenService:Create(selIndicator, TweenInfo.new(0.12), {BackgroundTransparency = 1}):Play()
+        end)
+        itemBtn.MouseButton1Click:Connect(function()
+            selected = itemBtn.Text
+            selectBtn.Text = "   " .. itemBtn.Text
+            isOpen = false
+
+            local targetFrameSize = UDim2.new(1, 0, 0, collapsedHeight)
+            TweenService:Create(listFrame, TweenInfo.new(0.18), {Size = UDim2.new(1, -10, 0, 0)}):Play()
+            TweenService:Create(frame, TweenInfo.new(0.18), {Size = targetFrameSize}):Play()
+            delay(0.18, function()
+                if listFrame and listFrame.Parent then listFrame.Visible = false end
+            end)
+
+            pcall(function()
+                listScroll.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y)
+            end)
+            if type(onSelect) == "function" then
+                pcall(onSelect, itemBtn.Text)
+            end
+        end)
+
+        return itemBtn
+    end
+
+    if type(items) == "table" then
+        for _, v in ipairs(items) do
+            createItemButton(v)
+        end
+    end
+
+    RunService.Heartbeat:Wait()
+    pcall(function()
+        listScroll.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y)
+    end)
+
+    selectBtn.MouseButton1Click:Connect(function()
+        if isOpen then
+            isOpen = false
+            local targetFrameSize = UDim2.new(1, 0, 0, collapsedHeight)
+            TweenService:Create(listFrame, TweenInfo.new(0.18), {Size = UDim2.new(1, -10, 0, 0)}):Play()
+            TweenService:Create(frame, TweenInfo.new(0.18), {Size = targetFrameSize}):Play()
+            delay(0.18, function()
+                if listFrame and listFrame.Parent then listFrame.Visible = false end
+            end)
+        else
+            isOpen = true
+            listFrame.Visible = true
+
+            RunService.Heartbeat:Wait()
+            local contentH = listLayout.AbsoluteContentSize.Y
+            local targetListH = math.clamp(contentH + 10, 30, 200)
+            local targetFrameH = collapsedHeight + targetListH
+            listScroll.Size = UDim2.new(1, 0, 0, targetListH)
+
+            TweenService:Create(frame, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, targetFrameH)}):Play()
+            TweenService:Create(listFrame, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, -10, 0, targetListH)}):Play()
+
+            delay(0.06, function()
+                pcall(function()
+                    listScroll.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y)
+                end)
+            end)
+        end
+    end)
+
+    return {
+        Root = frame,
+        Add = function(_, newItem)
+            createItemButton(newItem)
+            RunService.Heartbeat:Wait()
+            pcall(function()
+                listScroll.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y)
+            end)
+        end,
+        Clear = function(_)
+            for _, c in ipairs(listScroll:GetChildren()) do
+                if c:IsA("TextButton") and c.Name == "Item" then
+                    c:Destroy()
+                end
+            end
+            selectBtn.Text = "   Select Items"
+            isOpen = false
+            listFrame.Visible = false
+            pcall(function()
+                listScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+            end)
+            TweenService:Create(frame, TweenInfo.new(0.15), {Size = UDim2.new(1, 0, 0, collapsedHeight)}):Play()
+        end,
+    }
+end
+
+-- Textbox Creation Function
+function LunoraHub:CreateTextbox(parent, labelText, onConfirm)
+    local frame = Instance.new("Frame")
+    frame.Parent = parent
+    frame.Name = "Textbox"
+    frame.BackgroundColor3 = LunoraHub.Config.PrimaryColor
+    frame.BackgroundTransparency = 0.8
+    frame.Size = UDim2.new(1, 0, 0, 35)
+    local corner = Instance.new("UICorner")
+    corner.Parent = frame
+    corner.CornerRadius = UDim.new(0, 8)
+
+    local label = Instance.new("TextLabel")
+    label.Name = "TextboxLabel"
+    label.Parent = frame
+    label.BackgroundTransparency = 1
+    label.Position = UDim2.new(0, 15, 0.5, 0)
+    label.Text = labelText
+    label.Size = UDim2.new(1, 0, 0, 35)
+    label.Font = Enum.Font.GothamSemibold
+    label.AnchorPoint = Vector2.new(0, 0.5)
+    label.TextColor3 = Color3.fromRGB(245, 245, 245)
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Left
+
+    local realBox = Instance.new("TextBox")
+    realBox.Name = "RealTextbox"
+    realBox.Parent = frame
+    realBox.BackgroundColor3 = LunoraHub.Config.DarkColor
+    realBox.BackgroundTransparency = 0.1
+    realBox.Position = UDim2.new(1, -5, 0.5, 0)
+    realBox.AnchorPoint = Vector2.new(1, 0.5)
+    realBox.Size = UDim2.new(0, 80, 0, 25)
+    realBox.Font = Enum.Font.GothamSemibold
+    realBox.Text = ""
+    realBox.TextColor3 = Color3.fromRGB(225, 225, 225)
+    realBox.TextSize = 11
+    realBox.ClearTextOnFocus = false
+    realBox.TextXAlignment = Enum.TextXAlignment.Center
+    realBox.ClipsDescendants = true
+    local realCorner = Instance.new("UICorner")
+    realCorner.Parent = realBox
+    realCorner.CornerRadius = UDim.new(0, 5)
+
+    realBox.FocusLost:Connect(function()
+        pcall(onConfirm, realBox.Text)
+    end)
+end
+
+-- Separator Creation Function
+function LunoraHub:CreateSeparator(parent, text)
+    local sp = Instance.new("Frame")
+    sp.Name = "Seperator"
+    sp.Parent = parent
+    sp.BackgroundTransparency = 1
+    sp.Size = UDim2.new(1, 0, 0, 36)
+
+    local title = Instance.new("TextLabel")
+    title.Name = "Sep2"
+    title.Parent = sp
+    title.BackgroundTransparency = 1
+    title.AnchorPoint = Vector2.new(0.5, 1)
+    title.Position = UDim2.new(0.5, 0, 0, 30)
+    title.Size = UDim2.new(1, 0, 0, 36)
+    title.Font = Enum.Font.GothamBold
+    title.Text = text
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.TextSize = 14
+
+    local bar = Instance.new("Frame")
+    bar.Name = "Sep3"
+    bar.Parent = sp
+    bar.BackgroundColor3 = LunoraHub.Config.PrimaryColor
+    bar.BackgroundTransparency = 0
+    bar.BorderSizePixel = 0
+    bar.AnchorPoint = Vector2.new(0.5, 0.5)
+    bar.Position = UDim2.new(0.5, 0, 0, 25)
+    bar.Size = UDim2.new(0, 39, 0, 3)
+    local bcorner = Instance.new("UICorner")
+    bcorner.Parent = bar
+    bcorner.CornerRadius = UDim.new(0, math.huge)
+
+    local textSize = TextService:GetTextSize(title.Text, title.TextSize, title.Font, Vector2.new(1e6, 1e6))
+    bar.Size = UDim2.new(0, textSize.X * 0.7, 0, 3)
+end
+
+-- StatusBox Creation Function
+function LunoraHub:CreateStatusBox(parent, titleText, initialText, textColor)
+    initialText = tostring(initialText or "")
+    local container = Instance.new("Frame")
+    container.Name = "StatusBox"
+    container.Parent = parent
+    container.BackgroundColor3 = LunoraHub.Config.PrimaryColor
+    container.BackgroundTransparency = 0.8
+    container.Size = UDim2.new(1, 0, 0, 50)
+    local corner = Instance.new("UICorner")
+    corner.Parent = container
+    corner.CornerRadius = UDim.new(0, 8)
+
+    local title = Instance.new("TextLabel")
+    title.Parent = container
+    title.BackgroundTransparency = 1
+    title.Position = UDim2.new(0, 10, 0, 6)
+    title.Size = UDim2.new(1, -20, 0, 18)
+    title.Font = Enum.Font.GothamSemibold
+    title.Text = titleText or "Status"
+    title.TextColor3 = Color3.fromRGB(245, 245, 245)
+    title.TextSize = 12
+    title.TextXAlignment = Enum.TextXAlignment.Left
+
+    local content = Instance.new("TextLabel")
+    content.Parent = container
+    content.Name = "StatusContent"
+    content.BackgroundTransparency = 1
+    content.Position = UDim2.new(0, 10, 0, 28)
+    content.Size = UDim2.new(1, -20, 1, -36)
+    content.Font = Enum.Font.Code
+    content.TextWrapped = true
+    content.TextXAlignment = Enum.TextXAlignment.Left
+    content.TextYAlignment = Enum.TextYAlignment.Top
+    content.TextColor3 = textColor or Color3.fromRGB(230, 230, 230)
+    content.TextSize = 8
+    content.Text = initialText
+
+    local function refreshSize()
+        local txt = tostring(content.Text or "")
+        local size = TextService:GetTextSize(txt, content.TextSize, content.Font, Vector2.new(content.AbsoluteSize.X - 20, 1e6))
+        local newHeight = size.Y + 36
+        container.Size = UDim2.new(1, 0, 0, math.max(50, newHeight))
+    end
+
+    RunService.Heartbeat:Wait()
+    refreshSize()
+
+    local api = {}
+    function api.Set(_, newText)
+        content.Text = tostring(newText or "")
+        RunService.Heartbeat:Wait()
+        refreshSize()
+    end
+    function api.Append(_, moreText)
+        content.Text = content.Text .. tostring(moreText or "")
+        RunService.Heartbeat:Wait()
+        refreshSize()
+    end
+    function api.Clear(_)
+        content.Text = ""
+        refreshSize()
+    end
+    function api.GetText(_)
+        return content.Text
+    end
+    function api.SetColor(_, clr)
+        if typeof(clr) == "Color3" then
+            content.TextColor3 = clr
+        end
+    end
+
+    return api
+end
+
+-- Show/Hide Window Function
+function LunoraHub:SetWindowVisible(visible)
+    LunoraHub.Config.Visible = visible
+    MainFrame.Visible = visible
+end
+
+function LunoraHub:GetWindowVisible()
+    return LunoraHub.Config.Visible
 end
 
 print("Lunora Hub UI Library Loaded Successfully")
